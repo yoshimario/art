@@ -1,7 +1,7 @@
 package main
 
 import (
-	"art-decoderg/functions"
+	"art-decoder/functions"
 	"fmt"
 	"os"
 )
