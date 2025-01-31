@@ -10,24 +10,29 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run . <encoded_string> [-ml] [--encode]")
+		fmt.Println("Usage: go run . [<encoded_string>] [-ml] [--encode]")
 		return
 	}
 
-	input := os.Args[1]
+	var input string
 	isMultiLine := false
 	isEncode := false
 
-	// Check for additional flags
-	for _, arg := range os.Args[2:] {
+	// Parse flags and input
+	for _, arg := range os.Args[1:] {
 		switch arg {
-		case "-ml", "--multi-line": // Support both -ml and --multi-line
+		case "-ml", "--multi-line":
 			isMultiLine = true
 		case "--encode":
 			isEncode = true
 		default:
-			fmt.Println("Error: Unknown flag", arg)
-			return
+			// Treat the first non-flag argument as the input string
+			if input == "" {
+				input = arg
+			} else {
+				fmt.Println("Error: Unknown argument or too many inputs:", arg)
+				return
+			}
 		}
 	}
 

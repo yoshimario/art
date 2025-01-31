@@ -10,7 +10,7 @@ func Encode(input string) (string, error) {
 	var result strings.Builder
 	lines := strings.Split(input, "\n")
 
-	for _, line := range lines {
+	for lineIndex, line := range lines {
 		// Count leading spaces
 		leadingSpaces := 0
 		for leadingSpaces < len(line) && line[leadingSpaces] == ' ' {
@@ -33,18 +33,18 @@ func Encode(input string) (string, error) {
 				count++
 			}
 
-			// If the character repeats more than once, encode it
-			if count > 1 {
-				result.WriteString(fmt.Sprintf("[%d %c]", count, currentChar))
+			// Encode characters properly, ensuring brackets `]` are handled safely
+			if currentChar == ']' {
+				result.WriteString(fmt.Sprintf("[%d %s]", count, "\\]"))
 			} else {
-				result.WriteByte(currentChar)
+				result.WriteString(fmt.Sprintf("[%d %c]", count, currentChar))
 			}
 
 			i += count
 		}
 
-		// Add a newline character (except for the last line)
-		if line != lines[len(lines)-1] {
+		// Add a newline character if it's not the last line
+		if lineIndex < len(lines)-1 {
 			result.WriteString("\n")
 		}
 	}

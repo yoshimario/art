@@ -11,24 +11,27 @@ func Decode(encodedString string) (string, error) {
 	var result strings.Builder
 	lines := strings.Split(encodedString, "\n")
 
-	for _, line := range lines {
+	for lineIndex, line := range lines {
 		i := 0
-		// Handle leading spaces
-		if strings.HasPrefix(line, "[") {
-			// Extract the number of leading spaces
+
+		// Handle leading spaces if present
+		if strings.HasPrefix(line, "[") && strings.Contains(line, "]") {
 			j := strings.Index(line, " ")
-			if j == -1 {
+			k := strings.Index(line, "]")
+
+			if j == -1 || k == -1 || j >= k {
 				return "", errors.New("invalid leading spaces format")
 			}
+
 			countStr := line[1:j]
 			count, err := strconv.Atoi(countStr)
 			if err != nil {
 				return "", errors.New("invalid leading spaces count")
 			}
 
-			// Add the leading spaces to the result
+			// Add the correct number of leading spaces
 			result.WriteString(strings.Repeat(" ", count))
-			i = j + 2 // Skip past the "[N  ]" part
+			i = k + 1 // Move past the closing bracket
 		}
 
 		// Decode the rest of the line
@@ -56,10 +59,20 @@ func Decode(encodedString string) (string, error) {
 				if k >= len(line) {
 					return "", errors.New("unbalanced brackets")
 				}
+
+				// Extract character(s) to repeat
 				char := line[j+1 : k]
+
+				// Properly decode special bracket cases
+				if char == "\\]" {
+					char = "]"
+				} else if char == "\\[" {
+					char = "["
+				}
 
 				// Append repeated characters to result
 				result.WriteString(strings.Repeat(char, count))
+
 				i = k + 1
 			} else {
 				result.WriteByte(line[i])
@@ -67,25 +80,33 @@ func Decode(encodedString string) (string, error) {
 			}
 		}
 
-		// Add a newline character (except for the last line)
-		if line != lines[len(lines)-1] {
+		// Add a newline character if it's not the last line
+		if lineIndex < len(lines)-1 {
 			result.WriteString("\n")
 		}
 	}
 
 	return result.String(), nil
 }
+
 // DecodeMultiLine decodes a multi-line encoded string into text-based art.
 func DecodeMultiLine(encodedString string) (string, error) {
 	lines := strings.Split(encodedString, "\n")
 	var result strings.Builder
 
-	for _, line := range lines {
+	for i, line := range lines {
 		decodedLine, err := Decode(line)
 		if err != nil {
 			return "", err
 		}
-		result.WriteString(decodedLine + "\n")
+		trimmed := strings.TrimRight(decodedLine, " ") // Prevent trailing spaces
+
+		result.WriteString(trimmed)
+
+		// Only add newline if it's not the last line
+		if i < len(lines)-1 {
+			result.WriteString("\n")
+		}
 	}
 
 	return result.String(), nil
