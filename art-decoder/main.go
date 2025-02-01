@@ -55,7 +55,7 @@ func main() {
 		// Encode mode
 		encoded, err := functions.Encode(input)
 		if err != nil {
-			fmt.Println("Error encoding input:", err)
+			fmt.Println(err) // Directly print the error message
 			return
 		}
 		fmt.Println(encoded)
@@ -71,7 +71,7 @@ func main() {
 		}
 
 		if err != nil {
-			fmt.Println("Error decoding input:", err)
+			fmt.Println(err) // Directly print the error message
 			return
 		}
 		fmt.Println(decoded)
