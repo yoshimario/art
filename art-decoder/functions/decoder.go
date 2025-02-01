@@ -7,6 +7,10 @@ import (
 )
 
 // Decode decodes a single-line encoded string into text-based art.
+// Decode decodes a single-line encoded string into text-based art.
+// It takes an encoded string as input and returns the decoded string and an error.
+// The encoded string is expected to have a specific format with bracketed counts and characters.
+// This function handles the decoding logic, including handling leading spaces and escaped special characters.
 func Decode(encodedString string) (string, error) {
 	var result strings.Builder
 	lines := strings.Split(encodedString, "\n")
@@ -14,27 +18,7 @@ func Decode(encodedString string) (string, error) {
 	for lineIndex, line := range lines {
 		i := 0
 
-		// Handle leading spaces if present
-		if strings.HasPrefix(line, "[") && strings.Contains(line, "]") {
-			j := strings.Index(line, " ")
-			k := strings.Index(line, "]")
-
-			if j == -1 || k == -1 || j >= k {
-				return "", errors.New("invalid leading spaces format")
-			}
-
-			countStr := line[1:j]
-			count, err := strconv.Atoi(countStr)
-			if err != nil {
-				return "", errors.New("invalid leading spaces count")
-			}
-
-			// Add the correct number of leading spaces
-			result.WriteString(strings.Repeat(" ", count))
-			i = k + 1 // Move past the closing bracket
-		}
-
-		// Decode the rest of the line
+		// Decode the line
 		for i < len(line) {
 			if line[i] == '[' {
 				// Extract count
@@ -43,12 +27,12 @@ func Decode(encodedString string) (string, error) {
 					j++
 				}
 				if j >= len(line) {
-					return "", errors.New("invalid format")
+					return "", errors.New("invalid format: missing space after count")
 				}
 				countStr := line[i+1 : j]
 				count, err := strconv.Atoi(countStr)
 				if err != nil {
-					return "", errors.New("invalid count")
+					return "", errors.New("invalid count: " + countStr)
 				}
 
 				// Extract character(s) to repeat
@@ -57,13 +41,12 @@ func Decode(encodedString string) (string, error) {
 					k++
 				}
 				if k >= len(line) {
-					return "", errors.New("unbalanced brackets")
+					return "", errors.New("unbalanced brackets: missing closing bracket")
 				}
 
-				// Extract character(s) to repeat
 				char := line[j+1 : k]
 
-				// Properly decode special bracket cases
+				// Handle escaped special characters
 				if char == "\\]" {
 					char = "]"
 				} else if char == "\\[" {
@@ -73,8 +56,9 @@ func Decode(encodedString string) (string, error) {
 				// Append repeated characters to result
 				result.WriteString(strings.Repeat(char, count))
 
-				i = k + 1
+				i = k + 1 // Move past the closing bracket
 			} else {
+				// Append regular characters to result
 				result.WriteByte(line[i])
 				i++
 			}
@@ -99,9 +83,9 @@ func DecodeMultiLine(encodedString string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		trimmed := strings.TrimRight(decodedLine, " ") // Prevent trailing spaces
 
-		result.WriteString(trimmed)
+		// Ensure spaces and characters are not trimmed incorrectly
+		result.WriteString(decodedLine)
 
 		// Only add newline if it's not the last line
 		if i < len(lines)-1 {
