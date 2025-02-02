@@ -9,22 +9,18 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run . [<encoded_string>] [-ml] [--encode]")
+	if len(os.Args) > 1 && os.Args[1] == "test" {
+		runTests()
 		return
 	}
 
 	var input string
 	isMultiLine := false
-	isEncode := false
 
-	// Parse flags and input
 	for _, arg := range os.Args[1:] {
 		switch arg {
 		case "-ml", "--multi-line":
 			isMultiLine = true
-		case "--encode":
-			isEncode = true
 		default:
 			if input == "" {
 				input = arg
@@ -49,19 +45,10 @@ func main() {
 		input = strings.Join(lines, "\n")
 	}
 
-	if isEncode {
-		encoded, err := functions.Encode(input)
-		if err != nil {
-			fmt.Println("Encoding Error:", err)
-			return
-		}
-		fmt.Println(encoded)
-	} else {
-		decoded, err := functions.DecodeMultiLine(input)
-		if err != nil {
-			fmt.Println("Decoding Error:", err)
-			return
-		}
-		fmt.Println(decoded)
+	decoded, err := functions.DecodeMultiLine(input)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+	fmt.Println(decoded)
 }
