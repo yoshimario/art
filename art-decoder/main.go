@@ -26,19 +26,17 @@ func main() {
 		case "--encode":
 			isEncode = true
 		default:
-			// Treat the first non-flag argument as the input string
 			if input == "" {
 				input = arg
 			} else {
-				fmt.Println("Error: Unknown argument or too many inputs:", arg)
+				fmt.Println("Error: Too many inputs or unknown argument:", arg)
 				return
 			}
 		}
 	}
 
 	if isMultiLine {
-		// Read multi-line input from stdin
-		fmt.Println("Enter your multi-line input (Ctrl+D to end):")
+		fmt.Println("Enter multi-line input (Ctrl+D to end):")
 		scanner := bufio.NewScanner(os.Stdin)
 		var lines []string
 		for scanner.Scan() {
@@ -52,26 +50,16 @@ func main() {
 	}
 
 	if isEncode {
-		// Encode mode
 		encoded, err := functions.Encode(input)
 		if err != nil {
-			fmt.Println(err) // Directly print the error message
+			fmt.Println("Encoding Error:", err)
 			return
 		}
 		fmt.Println(encoded)
 	} else {
-		// Decode mode
-		var decoded string
-		var err error
-
-		if isMultiLine {
-			decoded, err = functions.DecodeMultiLine(input)
-		} else {
-			decoded, err = functions.Decode(input)
-		}
-
+		decoded, err := functions.DecodeMultiLine(input)
 		if err != nil {
-			fmt.Println(err) // Directly print the error message
+			fmt.Println("Decoding Error:", err)
 			return
 		}
 		fmt.Println(decoded)
