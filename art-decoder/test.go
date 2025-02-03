@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func runTests() {
+func runAdditionalTests() {
 	fmt.Println("Running tests...")
 
 	tests := []struct {

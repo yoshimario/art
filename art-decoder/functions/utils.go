@@ -3,40 +3,24 @@ package functions
 import (
 	"errors"
 	"regexp"
-	"strings"
-	"unicode"
 )
 
-// ValidateArguments checks if the arguments inside square brackets are valid.
+// ValidateArguments checks that every bracketed sequence has the proper format.
+// This regex accepts sequences of the form [count char] where count is one or more
+// digits and char is one or more characters (allowing escaped brackets).
 func ValidateArguments(input string) error {
-	// Use regex to extract bracketed sections
-	pattern := regexp.MustCompile(`\[\s*(\d+)\s+([^\[\]]+)\s*\]`)
+	pattern := regexp.MustCompile(`\[\s*(\d+)\s+((?:\\[\[\]]|[^$begin:math:display$$end:math:display$])+)\s*\]`)
 	matches := pattern.FindAllStringSubmatch(input, -1)
 
 	for _, match := range matches {
 		if len(match) < 3 {
-			continue // Skip invalid matches
+			return errors.New("Error: Invalid format inside brackets (expected '[count char]')")
 		}
-
-		// Extract count and character(s)
-		count := match[1]
-		character := match[2]
-
-		// Validate count (must be a number)
-		for _, c := range count {
-			if !unicode.IsDigit(c) {
-				return errors.New("Error: Invalid count inside brackets, must be a number")
-			}
-		}
-
-		// Validate character (should not contain `]` or `[`, must be a single char or valid sequence)
-		if strings.Contains(character, "[") || strings.Contains(character, "]") {
-			return errors.New("Error: Invalid character inside brackets")
-		}
+		// Additional checks (for example on the count or the character) can be added here.
 	}
 
-	// Check if there are any invalid bracketed sections
-	invalidPattern := regexp.MustCompile(`\[[^\]]*\]`)
+	// Ensure that any bracketed section matches the valid pattern.
+	invalidPattern := regexp.MustCompile(`$begin:math:display$[^$end:math:display$]*\]`)
 	invalidMatches := invalidPattern.FindAllString(input, -1)
 	if len(invalidMatches) > len(matches) {
 		return errors.New("Error: Invalid format inside brackets (expected '[count char]')")
@@ -45,34 +29,22 @@ func ValidateArguments(input string) error {
 	return nil
 }
 
-// ValidateBrackets ensures the encoded string has correctly balanced brackets.
+// ValidateBrackets ensures that all '[' and ']' are balanced.
+// (This version simply counts brackets and does not reject literal text following a closing bracket.)
 func ValidateBrackets(input string) error {
 	stack := 0
-	hasOpeningBracket := false // Track if at least one `[` appears
-
-	for i, char := range input {
+	for _, char := range input {
 		if char == '[' {
 			stack++
-			hasOpeningBracket = true
 		} else if char == ']' {
 			stack--
 			if stack < 0 {
 				return errors.New("Error: Extra closing bracket found")
 			}
-		} else if i > 0 && input[i-1] == ']' && !unicode.IsSpace(char) && char != '[' && char != '-' {
-			// Detects if non-space text appears after ] without another [
-			// Allow certain characters like '-' after ]
-			return errors.New("Error: Missing opening bracket")
 		}
 	}
-
-	if !hasOpeningBracket {
-		return errors.New("Error: Missing opening bracket")
+	if stack != 0 {
+		return errors.New("Error: Mismatched brackets")
 	}
-
-	if stack > 0 {
-		return errors.New("Error: Missing closing bracket")
-	}
-
 	return nil
 }
