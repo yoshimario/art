@@ -2,7 +2,6 @@ package functions
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -14,77 +13,105 @@ func Decode(encodedString string) (string, error) {
 		return "", nil
 	}
 
-	// First validate the encoded sequences and bracket balance.
+	// First validate that all bracketed sequences follow the proper format.
 	if err := ValidateArguments(encodedString); err != nil {
 		return "", err
 	}
-	if err := ValidateBrackets(encodedString); err != nil {
-		return "", err
-	}
 
 	var result strings.Builder
-	i := 0
-	for i < len(encodedString) {
-		if encodedString[i] == '[' {
-			// Process an encoded sequence.
-			j := i + 1
-			// Find the space that separates the count from the character(s).
-			for j < len(encodedString) && encodedString[j] != ' ' {
-				j++
-			}
-			if j >= len(encodedString) {
-				return "", errors.New("Error: Missing space after count")
-			}
+	lines := strings.Split(encodedString, "\n")
 
-			countStr := encodedString[i+1 : j]
-			count, err := strconv.Atoi(countStr)
-			if err != nil {
-				return "", fmt.Errorf("Error: Invalid count format (%s)", countStr)
-			}
+	// Process each line separately.
+	for _, line := range lines {
+		line = strings.TrimSpace(line) // Trim whitespace
 
-			// Find the closing bracket.
-			k := j + 1
-			for k < len(encodedString) && encodedString[k] != ']' {
-				k++
-			}
-			if k >= len(encodedString) {
-				return "", errors.New("Error: Missing closing bracket")
-			}
+		openBracketCount := 0
+		closeBracketCount := 0
 
-			charSeq := encodedString[j+1 : k]
-			// Handle escaped characters.
-			if charSeq == `\]` {
-				charSeq = "]"
-			} else if charSeq == `\[` {
-				charSeq = "["
-			}
+		i := 0
+		for i < len(line) {
+			if line[i] == '[' {
+				openBracketCount++
+				j := i + 1
+				for j < len(line) && line[j] != ' ' {
+					j++
+				}
+				if j >= len(line) {
+					return "", errors.New("Error: Missing space after count")
+				}
 
-			result.WriteString(strings.Repeat(charSeq, count))
-			i = k + 1
-		} else {
-			// For any character outside an encoded sequence, simply append it.
-			result.WriteByte(encodedString[i])
-			i++
+				countStr := line[i+1 : j]
+				count, err := strconv.Atoi(countStr)
+				if err != nil {
+					return "", errors.New("Error: Invalid format inside brackets (expected '[count char]')")
+				}
+
+				k := j + 1
+				for k < len(line) && line[k] != ']' {
+					k++
+				}
+				if k >= len(line) {
+					return "", errors.New("Error: Missing closing bracket")
+				}
+
+				charSeq := line[j+1 : k]
+				if charSeq == `\]` {
+					charSeq = "]"
+				} else if charSeq == `\[` {
+					charSeq = "["
+				}
+
+				result.WriteString(strings.Repeat(charSeq, count))
+				i = k + 1
+			} else if line[i] == ']' {
+				closeBracketCount++
+				if closeBracketCount > openBracketCount {
+					return "", errors.New("Error: Extra closing bracket found")
+				}
+			} else if line[i] == '-' || line[i] == '|' || line[i] == ' ' {
+				result.WriteByte(line[i])
+				i++
+				continue
+			} else {
+				return "", errors.New("Error: Missing opening bracket")
+			}
 		}
+
+		if openBracketCount > closeBracketCount {
+			return "", errors.New("Error: Missing closing bracket")
+		}
+
+		result.WriteString("\n")
 	}
-	return result.String(), nil
+
+	s := result.String()
+	if len(s) > 0 && s[len(s)-1] == '\n' {
+		s = s[:len(s)-1]
+	}
+	return s, nil
 }
 
 // DecodeMultiLine decodes a multi-line encoded string into text-based art.
-func DecodeMultiLine(encodedString string) (string, error) {
-	lines := strings.Split(encodedString, "\n")
-	var result strings.Builder
-
-	for idx, line := range lines {
-		decodedLine, err := Decode(line)
-		if err != nil {
-			return "", err
-		}
-		result.WriteString(decodedLine)
-		// Append newline if this isn’t the last line.
-		if idx < len(lines)-1 {
-			result.WriteString("\n")
-		}
+func DecodeMultiLine(input string) (string, error) {
+	if strings.TrimSpace(input) == "" {
+		return "", nil // Allow empty input
 	}
-	return result.String(), nil
+
+	lines := strings.Split(input, "\n") // Split input into lines
+	var decodedLines []string
+
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue // Skip empty lines
+		}
+
+		decoded, err := Decode(line) // Call the existing Decode function
+		if err != nil {
+			return "", err // Return error immediately if any line fails
+		}
+
+		decodedLines = append(decodedLines, decoded)
+	}
+
+	return strings.Join(decodedLines, "\n"), nil
 }
