@@ -9,58 +9,63 @@ import (
 
 // Decode decodes a single-line encoded string into text-based art.
 func Decode(encodedString string) (string, error) {
+	if encodedString == "" {
+		return "", nil
+	}
+
 	if err := ValidateBrackets(encodedString); err != nil {
-			return "", err
+		return "", err
+	}
+
+	if err := ValidateArguments(encodedString); err != nil {
+		return "", err
 	}
 
 	var result strings.Builder
 	lines := strings.Split(encodedString, "\n")
 
 	for lineIndex, line := range lines {
-			i := 0
-			for i < len(line) {
-					if line[i] == '[' {
-							j := i + 1
-							for j < len(line) && line[j] != ' ' {
-									j++
-							}
-							if j >= len(line) {
-									return "", errors.New("Error: Missing space after count")
-							}
-							countStr := line[i+1 : j]
-							count, err := strconv.Atoi(countStr)
-							if err != nil {
-									return "", fmt.Errorf("Error: Invalid count format (%s)", countStr)
-							}
+		i := 0
+		for i < len(line) {
+			if line[i] == '[' {
+				j := i + 1
+				for j < len(line) && line[j] != ' ' {
+					j++
+				}
+				if j >= len(line) {
+					return "", errors.New("Error: Invalid format inside brackets (expected '[count char]')")
+				}
+				countStr := line[i+1 : j]
+				count, err := strconv.Atoi(countStr)
+				if err != nil {
+					return "", fmt.Errorf("Error: Invalid count format (%s)", countStr)
+				}
 
-							k := j + 1
-							for k < len(line) && line[k] != ']' {
-									k++
-							}
-							if k >= len(line) {
-									return "", errors.New("Error: Missing closing bracket")
-							}
+				k := j + 1
+				for k < len(line) && line[k] != ']' {
+					k++
+				}
+				if k >= len(line) {
+					return "", errors.New("Error: Missing closing bracket")
+				}
 
-							char := line[j+1 : k]
+				char := line[j+1 : k]
+				if char == "\\]" {
+					char = "]"
+				} else if char == "\\[" {
+					char = "["
+				}
 
-							// Handle escaped special characters
-							if char == "\\]" {
-									char = "]"
-							} else if char == "\\[" {
-									char = "["
-							}
-
-							result.WriteString(strings.Repeat(char, count))
-
-							i = k + 1
-					} else {
-							result.WriteByte(line[i])
-							i++
-					}
+				result.WriteString(strings.Repeat(char, count))
+				i = k + 1
+			} else {
+				result.WriteByte(line[i])
+				i++
 			}
-			if lineIndex < len(lines)-1 {
-					result.WriteString("\n")
-			}
+		}
+		if lineIndex < len(lines)-1 {
+			result.WriteString("\n")
+		}
 	}
 	return result.String(), nil
 }
@@ -78,7 +83,6 @@ func DecodeMultiLine(encodedString string) (string, error) {
 
 		result.WriteString(decodedLine)
 
-		// Only add newline if it's not the last line
 		if i < len(lines)-1 {
 			result.WriteString("\n")
 		}
