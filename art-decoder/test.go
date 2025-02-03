@@ -12,7 +12,7 @@ func runTests() {
 		input    string
 		expected string
 	}{
-		{"[5 #][5 -_]-[5 #]", "#####-_-_-_-_-#####"},
+		{"[5 #][5 -_]-[5 #]", "#####-_-_-_-_-_-#####"},
 		{"[3 @][2 !]", "@@@!!"},
 		{"[5 #][5 -_]-[5 #]]", "Error: Extra closing bracket found"},
 		{"[5 #]5 -_]-[5 #]", "Error: Missing opening bracket"},
