@@ -14,18 +14,6 @@ func main() {
 	multiLine := flag.Bool("ml", false, "Decode multi-line input")
 	flag.Parse()
 
-	// Check whether standard input is coming from a terminal.
-	fi, err := os.Stdin.Stat()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error checking stdin:", err)
-		os.Exit(1)
-	}
-
-	// Print the prompt only if input is from a terminal (i.e., interactive mode).
-	if (fi.Mode() & os.ModeCharDevice) != 0 {
-		fmt.Println("Enter multi-line input (Ctrl+D to end):")
-	}
-
 	// Read all input from standard input.
 	input, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {

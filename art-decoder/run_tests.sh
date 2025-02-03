@@ -9,45 +9,58 @@ decoded_dir="files/decode"
 
 # Check if the executable exists
 if [ ! -x "$executable" ]; then
-  echo "Error: Executable $executable not found or not executable."
+  echo "❌ Error: Executable $executable not found or not executable."
   exit 1
 fi
 
 echo "🔍 Running inline tests..."
 
-# Inline test cases
-declare -A tests=(
-  ["[5 #][5 -_]-[5 #]"]="#####-_-_-_-_-_-#####"
-  ["[3 @][2 !]"]="@@@!!"
-  ["[5 #][5 -_]-[5 #]]"]="Error: Extra closing bracket found"
-  ["[5 #]5 -_]-[5 #]"]="Error: Missing opening bracket"
-  ["[5#][5 -_]-[5 #]"]="Error: Invalid format inside brackets (expected '[count char]')"
-  ["5 #[5 -_]-5 #"]="Error: Missing opening bracket"
+# Define test cases using two separate arrays
+test_inputs=(
+  "[5 #][5 -_]-[5 #]"
+  "[3 @][2 !]"
+  "[5 #][5 -_]-[5 #]]"
+  "[5 #]5 -_]-[5 #]"
+  "[5#][5 -_]-[5 #]"
+  "5 #[5 -_]-5 #"
 )
 
+expected_outputs=(
+  "#####-_-_-_-_-_-#####"
+  "@@@!!"
+  "Error: Extra closing bracket found"
+  "Error: Missing opening bracket"
+  "Error: Invalid format inside brackets (expected '[count char]')"
+  "Error: Missing opening bracket"
+)
+
+# Track test failures
+fail_count=0
+
 # Run inline tests
-for input in "${!tests[@]}"; do
-  expected="${tests[$input]}"
+for i in "${!test_inputs[@]}"; do
+  input="${test_inputs[$i]}"
+  expected="${expected_outputs[$i]}"
   output=$("$executable" -ml <<< "$input")  # Run the decoder with inline input
 
   if [[ "$output" == "$expected" ]]; then
     echo "✅ Inline Test passed: $input"
   else
     echo "❌ Inline Test failed: $input"
-    echo "Expected: $expected"
-    echo "Got: $output"
-    exit 1
+    echo "   Expected: $expected"
+    echo "   Got:      $output"
+    fail_count=$((fail_count + 1))
   fi
 done
 
-echo "✅ All inline tests passed!"
+echo "✅ All inline tests completed!"
 echo ""
 echo "🔍 Running file-based tests..."
 
 # Array of test case file names (without extensions)
 test_files=("cats" "kood" "lion" "plane")
 
-# Loop over each test case (file-based)
+# Run file-based tests
 for name in "${test_files[@]}"; do
   encoded_file="${encoded_dir}/${name}.encoded.txt"
   expected_file="${decoded_dir}/${name}.art.txt"
@@ -55,10 +68,12 @@ for name in "${test_files[@]}"; do
   # Ensure files exist
   if [ ! -f "$encoded_file" ]; then
     echo "❌ Error: Encoded file $encoded_file not found."
+    fail_count=$((fail_count + 1))
     continue
   fi
   if [ ! -f "$expected_file" ]; then
     echo "❌ Error: Expected decoded file $expected_file not found."
+    fail_count=$((fail_count + 1))
     continue
   fi
 
@@ -73,12 +88,19 @@ for name in "${test_files[@]}"; do
     echo "✅ File Test passed: $name"
   else
     echo "❌ File Test failed: $name"
-    echo "Expected output from $expected_file:"
+    echo "   Expected output from $expected_file:"
     echo "$expected_output"
-    echo "Got:"
+    echo "   Got:"
     echo "$output"
-    exit 1
+    fail_count=$((fail_count + 1))
   fi
 done
 
-echo "🎉 All tests (inline + file-based) completed successfully!"
+# Summary
+if [[ $fail_count -gt 0 ]]; then
+  echo "❌ Some tests failed ($fail_count failures)."
+  exit 1
+else
+  echo "🎉 All tests (inline + file-based) passed successfully!"
+  exit 0
+fi
