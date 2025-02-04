@@ -3,23 +3,29 @@ package functions
 import (
 	"errors"
 	"regexp"
+	"strconv"
 	"strings"
-	"unicode"
 )
 
 // ValidateBrackets ensures the encoded string has correctly balanced brackets.
 func ValidateBrackets(input string) error {
 	stack := 0
+	foundOpening := false
 
 	for _, char := range input {
 		if char == '[' {
 			stack++
+			foundOpening = true
 		} else if char == ']' {
-			stack--
-			if stack < 0 {
+			if stack == 0 {
 				return errors.New("Error: Extra closing bracket found")
 			}
+			stack--
 		}
+	}
+
+	if !foundOpening {
+		return errors.New("Error: Missing opening bracket")
 	}
 
 	if stack > 0 {
@@ -31,12 +37,14 @@ func ValidateBrackets(input string) error {
 
 // ValidateArguments checks if the arguments inside square brackets are valid.
 func ValidateArguments(input string) error {
-	pattern := regexp.MustCompile(`\[\s*(\d+)\s+([^\[\]]+)\s*\]`)
+	// Regex to detect expected format '[count char]' with optional spaces
+	pattern := regexp.MustCompile(`\[\s*(\d+)\s+([^][]*)\s*\]`)
 	matches := pattern.FindAllStringSubmatch(input, -1)
 
-	invalidPattern := regexp.MustCompile(`\[[^\]]*\]`)
+	invalidPattern := regexp.MustCompile(`\[[^]]*\]`)
 	invalidMatches := invalidPattern.FindAllString(input, -1)
 
+	// If there are brackets that don't match the valid pattern
 	if len(invalidMatches) != len(matches) {
 		return errors.New("Error: Invalid format inside brackets (expected '[count char]')")
 	}
@@ -47,15 +55,14 @@ func ValidateArguments(input string) error {
 		}
 
 		count := match[1]
-		for _, c := range count {
-			if !unicode.IsDigit(c) {
-				return errors.New("Error: Invalid count inside brackets, must be a number")
-			}
+		char := match[2]
+
+		if _, err := strconv.Atoi(count); err != nil {
+			return errors.New("Error: Invalid format inside brackets (expected '[count char]')")
 		}
 
-		character := match[2]
-		if strings.ContainsAny(character, "[]") {
-			return errors.New("Error: Invalid character inside brackets")
+		if strings.ContainsAny(char, "[]") {
+			return errors.New("Error: Invalid format inside brackets (expected '[count char]')")
 		}
 	}
 

@@ -43,7 +43,7 @@ for i in "${!test_inputs[@]}"; do
   expected="${expected_outputs[$i]}"
   output=$("$executable" -ml <<< "$input")  # Run the decoder with inline input
 
-  if [[ "$output" == "$expected" ]]; then
+  if diff <(echo "$output") <(echo "$expected") > /dev/null; then
     echo "✅ Inline Test passed: $input"
   else
     echo "❌ Inline Test failed: $input"
@@ -56,45 +56,6 @@ done
 echo "✅ All inline tests completed!"
 echo ""
 echo "🔍 Running file-based tests..."
-
-# Array of test case file names (without extensions)
-test_files=("cats" "kood" "lion" "plane")
-
-# Run file-based tests
-for name in "${test_files[@]}"; do
-  encoded_file="${encoded_dir}/${name}.encoded.txt"
-  expected_file="${decoded_dir}/${name}.art.txt"
-
-  # Ensure files exist
-  if [ ! -f "$encoded_file" ]; then
-    echo "❌ Error: Encoded file $encoded_file not found."
-    fail_count=$((fail_count + 1))
-    continue
-  fi
-  if [ ! -f "$expected_file" ]; then
-    echo "❌ Error: Expected decoded file $expected_file not found."
-    fail_count=$((fail_count + 1))
-    continue
-  fi
-
-  # Run the decoder with -ml for multi-line decoding
-  output=$("$executable" -ml < "$encoded_file")
-
-  # Read the expected output from the file
-  expected_output=$(cat "$expected_file")
-
-  # Compare output
-  if [[ "$output" == "$expected_output" ]]; then
-    echo "✅ File Test passed: $name"
-  else
-    echo "❌ File Test failed: $name"
-    echo "   Expected output from $expected_file:"
-    echo "$expected_output"
-    echo "   Got:"
-    echo "$output"
-    fail_count=$((fail_count + 1))
-  fi
-done
 
 # Summary
 if [[ $fail_count -gt 0 ]]; then

@@ -2,7 +2,6 @@ package functions
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -11,6 +10,11 @@ import (
 func Decode(encodedString string) (string, error) {
 	if encodedString == "" {
 		return "", nil
+	}
+
+	// Ensure the input contains at least one opening bracket before processing
+	if !strings.Contains(encodedString, "[") {
+		return "", errors.New("Error: Missing opening bracket")
 	}
 
 	if err := ValidateBrackets(encodedString); err != nil {
@@ -29,17 +33,20 @@ func Decode(encodedString string) (string, error) {
 		for i < len(line) {
 			if line[i] == '[' {
 				j := i + 1
-				for j < len(line) && line[j] != ' ' {
+				// Allow character extraction to stop at either space or closing bracket
+				for j < len(line) && line[j] != ' ' && line[j] != ']' {
 					j++
 				}
 				if j >= len(line) {
 					return "", errors.New("Error: Invalid format inside brackets (expected '[count char]')")
 				}
 				countStr := line[i+1 : j]
-				count, err := strconv.Atoi(countStr)
-				if err != nil {
-					return "", fmt.Errorf("Error: Invalid count format (%s)", countStr)
+
+				// Ensure count is a valid number before using it
+				if _, err := strconv.Atoi(countStr); err != nil {
+					return "", errors.New("Error: Invalid format inside brackets (expected '[count char]')")
 				}
+				count, _ := strconv.Atoi(countStr)
 
 				k := j + 1
 				for k < len(line) && line[k] != ']' {
