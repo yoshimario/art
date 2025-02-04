@@ -27,7 +27,7 @@ test_inputs=(
 )
 
 expected_outputs=(
-  "#####-_-_-_-_-#####"
+  "#####-_-_-_-_-_-#####"
   "@@@!!"
   "Error: Extra closing bracket found"
   "Error: Missing opening bracket"
