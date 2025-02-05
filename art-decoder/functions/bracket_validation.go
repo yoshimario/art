@@ -9,12 +9,12 @@ import (
 // ValidateBrackets ensures the encoded string has correctly balanced brackets.
 func ValidateBrackets(input string) error {
 	stack := 0
-	for i, char := range input {
+	for _, char := range input { // Removed unused 'i'
 		if char == '[' {
 			stack++
 		} else if char == ']' {
 			if stack == 0 {
-				return errors.New("Error: Extra closing bracket found at position " + strconv.Itoa(i))
+				return errors.New("Error: Extra closing bracket found")
 			}
 			stack--
 		}
