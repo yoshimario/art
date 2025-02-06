@@ -2,10 +2,11 @@ package main
 
 import (
 	"art-decoder/functions"
+	"bufio"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
+	"strings"
 )
 
 func isInteractive() bool {
@@ -20,21 +21,52 @@ func main() {
 	multiLine := flag.Bool("ml", false, "Decode multi-line input")
 	flag.Parse()
 
-	if *multiLine && isInteractive() {
-		fmt.Println("Enter multi-line input. Press Ctrl+D to finish:")
-	}
+	args := flag.Args()
+	var input string
 
-	input, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error reading input:", err)
-		os.Exit(1)
-	}
-
-	var output string
-	if *multiLine {
-		output, err = functions.DecodeMultiLine(string(input))
+	// Use command-line arguments if provided
+	if len(args) > 0 {
+		input = strings.Join(args, " ")
 	} else {
-		output, err = functions.DecodeSingleLine(string(input))
+		// Multi-line input mode
+		if *multiLine {
+			// Only show prompt if running interactively (not in test mode)
+			if isInteractive() {
+				fmt.Println("Enter multi-line input. Press Ctrl+D (Linux/macOS) or Ctrl+Z (Windows) to finish:")
+			}
+			scanner := bufio.NewScanner(os.Stdin)
+			var lines []string
+
+			for scanner.Scan() {
+				lines = append(lines, scanner.Text())
+			}
+
+			if err := scanner.Err(); err != nil {
+				fmt.Fprintln(os.Stderr, "Error reading input:", err)
+				os.Exit(1)
+			}
+
+			input = strings.Join(lines, "\n")
+		} else {
+			// Read single-line input from stdin
+			reader := bufio.NewReader(os.Stdin)
+			data, err := reader.ReadString('\n')
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Error reading input:", err)
+				os.Exit(1)
+			}
+			input = strings.TrimSpace(data)
+		}
+	}
+
+	// Decode using the appropriate function
+	var output string
+	var err error
+
+	if *multiLine {
+		output, err = functions.DecodeMultiLine(input)
+	} else {
+		output, err = functions.DecodeSingleLine(input)
 	}
 
 	if err != nil {
