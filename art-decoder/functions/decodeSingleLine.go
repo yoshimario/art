@@ -21,38 +21,36 @@ func DecodeSingleLine(encodedString string) (string, error) {
 	}
 
 	var result strings.Builder
-	lines := strings.Split(encodedString, "\n")
-
-	for _, line := range lines {
-		i := 0
-		for i < len(line) {
-			if line[i] == '[' {
-				j := i + 1
-				for j < len(line) && line[j] != ' ' && line[j] != ']' {
-					j++
-				}
-				if j >= len(line) || line[j] != ' ' {
-					return "", errors.New("Error: Invalid format inside brackets (expected '[count char]')")
-				}
-				count, err := strconv.Atoi(line[i+1 : j])
-				if err != nil {
-					return "", errors.New("Error: Invalid number format inside brackets")
-				}
+	i := 0
+	for i < len(encodedString) {
+		if encodedString[i] == '[' {
+			// Handle [count char] sequence
+			j := i + 1
+			for j < len(encodedString) && encodedString[j] != ' ' && encodedString[j] != ']' {
 				j++
-				charStart := j
-				for j < len(line) && line[j] != ']' {
-					j++
-				}
-				if j >= len(line) {
-					return "", errors.New("Error: Missing closing bracket")
-				}
-				charSeq := line[charStart:j]
-				result.WriteString(strings.Repeat(charSeq, count))
-				i = j + 1
-			} else {
-				result.WriteByte(line[i])
-				i++
 			}
+			if j >= len(encodedString) || encodedString[j] != ' ' {
+				return "", errors.New("Error: Invalid format inside brackets (expected '[count char]')")
+			}
+			count, err := strconv.Atoi(encodedString[i+1 : j])
+			if err != nil {
+				return "", errors.New("Error: Invalid number format inside brackets")
+			}
+			j++
+			charStart := j
+			for j < len(encodedString) && encodedString[j] != ']' {
+				j++
+			}
+			if j >= len(encodedString) {
+				return "", errors.New("Error: Missing closing bracket")
+			}
+			charSeq := encodedString[charStart:j]
+			result.WriteString(strings.Repeat(charSeq, count))
+			i = j + 1
+		} else {
+			// Handle characters outside of [count char] sequences
+			result.WriteByte(encodedString[i])
+			i++
 		}
 	}
 	return result.String(), nil
