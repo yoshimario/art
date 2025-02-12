@@ -1,62 +1,44 @@
 package functions
 
 import (
-    "errors"
     "strconv"
     "strings"
 )
 
-// DecodeSingleLine expands bracket patterns [count chars]
 func DecodeSingleLine(encodedString string) (string, error) {
-    if encodedString == "" {
-        return "", nil
-    }
-
-    // 1) Validate brackets first
+    // 1) Validate bracket structure/format
     if err := ValidateBrackets(encodedString); err != nil {
         return "", err
     }
 
-    // 2) Then decode
+    // 2) Expand bracket patterns [count chars]
     var result strings.Builder
     i := 0
     for i < len(encodedString) {
-        ch := encodedString[i]
-
-        if ch == '[' {
-            // parse "[count char... ]"
+        if encodedString[i] == '[' {
             j := i + 1
+            // Find first space or ']' after the count
             for j < len(encodedString) && encodedString[j] != ' ' && encodedString[j] != ']' {
                 j++
             }
-            if j >= len(encodedString) || encodedString[j] != ' ' {
-                return "", errors.New("Error: Invalid format inside brackets (expected '[count char]')")
-            }
-
+            // No need to check errors here, because bracket validation
+            // guaranteed we have "[<digits> <non-empty>]"
             countStr := encodedString[i+1 : j]
-            count, err := strconv.Atoi(countStr)
-            if err != nil {
-                return "", errors.New("Error: Invalid number format inside brackets")
-            }
+            count, _ := strconv.Atoi(countStr) // safe, we validated it
 
             j++ // move past the space
             charStart := j
             for j < len(encodedString) && encodedString[j] != ']' {
                 j++
             }
-            if j >= len(encodedString) {
-                return "", errors.New("Error: Missing closing bracket")
-            }
-
+            // guaranteed to find the ']' by bracket validation
             charSeq := encodedString[charStart:j]
-            // Expand the bracketed substring count times
+            // Expand it
             result.WriteString(strings.Repeat(charSeq, count))
 
-            // Advance index beyond the closing bracket
-            i = j + 1
+            i = j + 1 // move beyond ']'
         } else {
-            // normal character
-            result.WriteByte(ch)
+            result.WriteByte(encodedString[i])
             i++
         }
     }

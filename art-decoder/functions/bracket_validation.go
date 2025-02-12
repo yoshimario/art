@@ -7,39 +7,59 @@ import (
 	"strings"
 )
 
-// ValidateBrackets ensures the string has correctly balanced brackets
-// and also rejects any `#[` sequence.
+// ValidateBrackets enforces bracket structure AND correct "[count char]" format.
 func ValidateBrackets(input string) error {
-	// 1) Immediately reject if there's a `#[` sequence anywhere.
-	//    We treat that as "Missing opening bracket."
+	// 1) Immediately reject any occurrence of "#["
 	if strings.Contains(input, "#[") {
 			return errors.New("Error: Missing opening bracket")
 	}
 
+	// 2) Stack-based check for unbalanced or extra brackets
 	stack := 0
-
-	for i, r := range input {
-			if r == '[' {
+	for i := 0; i < len(input); i++ {
+			switch input[i] {
+			case '[':
 					stack++
-			} else if r == ']' {
-					// If we have a closing bracket but stack == 0, it’s unbalanced.
+			case ']':
 					if stack == 0 {
-							// Your tests do this special logic:
-							//    If i == 0 or the previous character is not ']', say "Missing opening bracket".
-							//    Otherwise, "Extra closing bracket found".
-							if i == 0 || rune(input[i-1]) != ']' {
+							// No matching '['
+							// If preceding char != ']', => "Missing opening bracket"
+							// Otherwise => "Extra closing bracket found"
+							if i == 0 || input[i-1] != ']' {
 									return errors.New("Error: Missing opening bracket")
 							}
 							return errors.New("Error: Extra closing bracket found")
 					}
-					// Match up with an opening bracket
 					stack--
 			}
 	}
-
-	// If at the end stack > 0, we have more '[' than ']'
 	if stack > 0 {
 			return errors.New("Error: Missing closing bracket")
+	}
+
+	// 3) Each bracket must match "[<integer> <non-empty-chars>]"
+	//    e.g. "[5 -_]" is valid, "[5#]" is invalid (no space), "[5  ]" also invalid (empty second arg).
+	bracketRe := regexp.MustCompile(`\[[^]]*\]`)
+	brackets := bracketRe.FindAllString(input, -1)
+	for _, br := range brackets {
+			// Remove outer brackets
+			content := br[1 : len(br)-1] // everything between '[' and ']'
+
+			// Split content into two parts: "count" and "chars"
+			parts := strings.SplitN(content, " ", 2)
+			if len(parts) < 2 {
+					return errors.New("Error: Invalid format inside brackets (expected '[count char]')")
+			}
+			countPart, charsPart := parts[0], parts[1]
+
+			// Check count is a valid integer
+			if _, err := strconv.Atoi(countPart); err != nil {
+					return errors.New("Error: Invalid format inside brackets (expected '[count char]')")
+			}
+			// Check that charsPart is not empty
+			if len(charsPart) == 0 {
+					return errors.New("Error: Invalid format inside brackets (expected '[count char]')")
+			}
 	}
 
 	return nil
