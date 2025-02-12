@@ -1,57 +1,65 @@
 package functions
 
 import (
-	"errors"
-	"strconv"
-	"strings"
+    "errors"
+    "strconv"
+    "strings"
 )
 
-// DecodeSingleLine decodes a single-line encoded string into text-based art.
+// DecodeSingleLine expands bracket patterns [count chars]
 func DecodeSingleLine(encodedString string) (string, error) {
-	if encodedString == "" {
-		return "", nil
-	}
+    if encodedString == "" {
+        return "", nil
+    }
 
-	if err := ValidateBrackets(encodedString); err != nil {
-		return "", err
-	}
+    // 1) Validate brackets first
+    if err := ValidateBrackets(encodedString); err != nil {
+        return "", err
+    }
 
-	if err := ValidateArguments(encodedString); err != nil {
-		return "", err
-	}
+    // 2) Then decode
+    var result strings.Builder
+    i := 0
+    for i < len(encodedString) {
+        ch := encodedString[i]
 
-	var result strings.Builder
-	i := 0
-	for i < len(encodedString) {
-		if encodedString[i] == '[' {
-			// Handle [count char] sequence
-			j := i + 1
-			for j < len(encodedString) && encodedString[j] != ' ' && encodedString[j] != ']' {
-				j++
-			}
-			if j >= len(encodedString) || encodedString[j] != ' ' {
-				return "", errors.New("Error: Invalid format inside brackets (expected '[count char]')")
-			}
-			count, err := strconv.Atoi(encodedString[i+1 : j])
-			if err != nil {
-				return "", errors.New("Error: Invalid number format inside brackets")
-			}
-			j++
-			charStart := j
-			for j < len(encodedString) && encodedString[j] != ']' {
-				j++
-			}
-			if j >= len(encodedString) {
-				return "", errors.New("Error: Missing closing bracket")
-			}
-			charSeq := encodedString[charStart:j]
-			result.WriteString(strings.Repeat(charSeq, count))
-			i = j + 1
-		} else {
-			// Handle characters outside of [count char] sequences
-			result.WriteByte(encodedString[i])
-			i++
-		}
-	}
-	return result.String(), nil
+        if ch == '[' {
+            // parse "[count char... ]"
+            j := i + 1
+            for j < len(encodedString) && encodedString[j] != ' ' && encodedString[j] != ']' {
+                j++
+            }
+            if j >= len(encodedString) || encodedString[j] != ' ' {
+                return "", errors.New("Error: Invalid format inside brackets (expected '[count char]')")
+            }
+
+            countStr := encodedString[i+1 : j]
+            count, err := strconv.Atoi(countStr)
+            if err != nil {
+                return "", errors.New("Error: Invalid number format inside brackets")
+            }
+
+            j++ // move past the space
+            charStart := j
+            for j < len(encodedString) && encodedString[j] != ']' {
+                j++
+            }
+            if j >= len(encodedString) {
+                return "", errors.New("Error: Missing closing bracket")
+            }
+
+            charSeq := encodedString[charStart:j]
+            // Expand the bracketed substring count times
+            result.WriteString(strings.Repeat(charSeq, count))
+
+            // Advance index beyond the closing bracket
+            i = j + 1
+        } else {
+            // normal character
+            result.WriteByte(ch)
+            i++
+        }
+    }
+
+    return result.String(), nil
 }
