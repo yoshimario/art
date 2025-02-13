@@ -24,6 +24,8 @@ test_inputs=(
   "[5 #][5 -_-[5 #]"
   "[5#][5 -_]-[5 #]"
   "5 #[5 -_]-5 #"
+  "[5  ]"
+  "5 #[5 -_]-5 #"
 )
 
 expected_outputs=(
@@ -32,6 +34,8 @@ expected_outputs=(
   "Error: Extra closing bracket found"
   "Error: Missing opening bracket"
   "Error: Missing closing bracket"
+  "Error: Invalid format inside brackets (expected '[count char]')"
+  "Error: Missing opening bracket"
   "Error: Invalid format inside brackets (expected '[count char]')"
   "Error: Missing opening bracket"
 )

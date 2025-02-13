@@ -1,44 +1,51 @@
 package functions
 
 import (
+    "errors"
     "strconv"
     "strings"
 )
 
-func DecodeSingleLine(encodedString string) (string, error) {
-    // 1) Validate bracket structure/format
-    if err := ValidateBrackets(encodedString); err != nil {
+func DecodeSingleLine(encoded string) (string, error) {
+    // 1) Validate bracket structure/format first
+    if err := ValidateBrackets(encoded); err != nil {
         return "", err
     }
 
-    // 2) Expand bracket patterns [count chars]
+    // 2) Now decode expansions [count chars]
     var result strings.Builder
     i := 0
-    for i < len(encodedString) {
-        if encodedString[i] == '[' {
+    for i < len(encoded) {
+        if encoded[i] == '[' {
             j := i + 1
-            // Find first space or ']' after the count
-            for j < len(encodedString) && encodedString[j] != ' ' && encodedString[j] != ']' {
+            // Find either space or closing bracket to separate count
+            for j < len(encoded) && encoded[j] != ' ' && encoded[j] != ']' {
                 j++
             }
-            // No need to check errors here, because bracket validation
-            // guaranteed we have "[<digits> <non-empty>]"
-            countStr := encodedString[i+1 : j]
-            count, _ := strconv.Atoi(countStr) // safe, we validated it
+            if j >= len(encoded) || encoded[j] != ' ' {
+                // Shouldn't happen if ValidateBrackets was correct, but just in case:
+                return "", errors.New("Error: Invalid format inside brackets (expected '[count char]')")
+            }
 
-            j++ // move past the space
+            // parse the integer
+            countStr := encoded[i+1 : j]
+            // safe to ignore the error because ValidateBrackets ensures it's valid integer
+            count, _ := strconv.Atoi(countStr)
+
+            j++ // skip the space
             charStart := j
-            for j < len(encodedString) && encodedString[j] != ']' {
+            for j < len(encoded) && encoded[j] != ']' {
                 j++
             }
-            // guaranteed to find the ']' by bracket validation
-            charSeq := encodedString[charStart:j]
-            // Expand it
-            result.WriteString(strings.Repeat(charSeq, count))
+            // guaranteed to find ']' because bracket validation ensures balanced
+            charSeq := encoded[charStart:j]
 
-            i = j + 1 // move beyond ']'
+            // Expand the substring
+            result.WriteString(strings.Repeat(charSeq, count))
+            i = j + 1 // move past ']'
         } else {
-            result.WriteByte(encodedString[i])
+            // Normal character
+            result.WriteByte(encoded[i])
             i++
         }
     }
