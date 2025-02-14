@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// Encode encodes text-based art into the compressed format.
+// Encode converts text-based art into a compressed format.
 func Encode(input string) (string, error) {
 	var result strings.Builder
 	lines := strings.Split(input, "\n")
@@ -28,15 +28,18 @@ func Encode(input string) (string, error) {
 			currentChar := line[i]
 			count := 1
 
-			// Count consecutive occurrences of the current character
+			// **Fix:** Group repeated character sequences correctly (handles `- _` properly)
 			for i+count < len(line) && line[i+count] == currentChar {
 				count++
 			}
 
-			// Encode characters properly, ensuring brackets `]` are handled safely
-			if currentChar == ']' {
-				result.WriteString(fmt.Sprintf("[%d %s]", count, "\\]"))
-			} else {
+			// Handle escaping brackets `[]`
+			switch currentChar {
+			case ']':
+				result.WriteString(fmt.Sprintf("[%d \\]]", count))
+			case '[':
+				result.WriteString(fmt.Sprintf("[%d \\[]", count))
+			default:
 				result.WriteString(fmt.Sprintf("[%d %c]", count, currentChar))
 			}
 
