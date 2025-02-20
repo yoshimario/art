@@ -20,13 +20,13 @@ func isInteractive() bool {
 
 func main() {
 	multiLine := flag.Bool("ml", false, "Decode multi-line input")
-	encodeMode := flag.Bool("encode", false, "Encode input text") // Add encoding flag
+	encodeMode := flag.Bool("encode", false, "Encode input text")
 	flag.Parse()
 
 	args := flag.Args()
 	var input string
 
-	// Read from command-line arguments or stdin
+	// Read input from CLI arguments or stdin
 	if len(args) > 0 {
 		input = strings.Join(args, " ")
 	} else {

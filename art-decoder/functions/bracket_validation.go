@@ -7,14 +7,13 @@ import (
 	"strings"
 )
 
-// ValidateBrackets enforces bracket structure AND correct "[count char]" format.
 func ValidateBrackets(input string) error {
-	// Immediately reject any occurrence of "#[" => "Error: Missing opening bracket"
+	// Reject "#[" as an incorrect opening bracket
 	if strings.Contains(input, "#[") {
 		return errors.New("Error: Missing opening bracket")
 	}
 
-	// Stack-based check for unbalanced or extra brackets
+	// Stack-based validation for bracket pairs
 	stack := 0
 	for i := 0; i < len(input); i++ {
 		ch := input[i]
@@ -34,27 +33,34 @@ func ValidateBrackets(input string) error {
 		return errors.New("Error: Missing closing bracket")
 	}
 
-	// Regex to find all bracketed segments
-	bracketRe := regexp.MustCompile(`$begin:math:display$[^$end:math:display$]*\]`)
-	brackets := bracketRe.FindAllString(input, -1)
-	for _, br := range brackets {
+	// **Step 1: Match ALL bracket expressions**
+	bracketRe := regexp.MustCompile(`$begin:math:display$\\s*\\d+\\s+[^$end:math:display$]*\s*\]`)
+	allBrackets := bracketRe.FindAllString(input, -1)
+
+	// **Step 2: Allow normal text (for decoding), but reject `[5  ]`**
+	if len(allBrackets) == 0 {
+		return nil // Allow decoder to process non-bracketed text
+	}
+
+	// **Step 3: Validate all bracket expressions**
+	for _, br := range allBrackets {
 		content := br[1 : len(br)-1] // Extract content inside brackets
+		parts := strings.Fields(content)
 
 		// Ensure exactly two parts: "count" and "chars"
-		parts := strings.SplitN(content, " ", 2)
-		if len(parts) < 2 {
+		if len(parts) != 2 {
 			return errors.New("Error: Invalid format inside brackets (expected '[count char]')")
 		}
 
 		countPart, charsPart := parts[0], parts[1]
 
-		// Check that countPart is a valid integer
+		// Ensure countPart is a valid integer
 		if _, err := strconv.Atoi(countPart); err != nil {
-			return errors.New("Error: Invalid format inside brackets (expected '[count char]')")
+			return errors.New("Error: Invalid number format inside brackets")
 		}
 
-		// Trim the charsPart to reject "[5  ]" or similar cases with only spaces
-		if strings.TrimSpace(charsPart) == "" {
+		// **Strict check: Reject `[5  ]` (empty character sequence)**
+		if len(strings.TrimSpace(charsPart)) == 0 {
 			return errors.New("Error: Invalid format inside brackets (expected '[count char]')")
 		}
 	}
