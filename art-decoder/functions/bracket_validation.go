@@ -60,9 +60,9 @@ func ValidateBrackets(input string) error {
 		}
 
 		// **Strict check: Reject `[5  ]` (empty character sequence)**
-		if len(strings.TrimSpace(charsPart)) == 0 {
+		if len(charsPart) == 0 || strings.TrimSpace(charsPart) == "" {
 			return errors.New("Error: Invalid format inside brackets (expected '[count char]')")
-		}
+	}
 	}
 
 	return nil

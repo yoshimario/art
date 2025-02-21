@@ -57,7 +57,14 @@ func main() {
 		}
 	}
 
-	// **Check if encoding mode is enabled**
+	// **Step 1: Validate Input Before Processing**
+	err := functions.ValidateBrackets(input)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	// **Step 2: Check If Encoding Mode Is Enabled**
 	if *encodeMode {
 		output, err := functions.Encode(input)
 		if err != nil {
@@ -68,16 +75,15 @@ func main() {
 		return
 	}
 
-	// **Decoding mode**
+	// **Step 3: Decoding Mode**
 	var output string
-	var err error
 	if *multiLine {
 		output, err = functions.DecodeMultiLine(input)
 	} else {
 		output, err = functions.DecodeSingleLine(input)
 	}
 
-	// If there's an error, print it and exit
+	// **Step 4: If there's an error, print it and exit**
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
