@@ -6,21 +6,33 @@ import (
 	"flag"
 	"os"
 	"strings"
+	"time"
 )
 
-// isInteractive checks if we're running in an interactive terminal
-func isInteractive() bool {
-	info, err := os.Stdin.Stat()
-	if err != nil {
-		return false
-	}
-	return (info.Mode() & os.ModeCharDevice) != 0
-}
-
 func main() {
+	// Define command line flags
 	multiLine := flag.Bool("ml", false, "Decode multi-line input")
 	encodeMode := flag.Bool("encode", false, "Encode input text")
+	
+	// Animation flags
+	animateMode := flag.Bool("animate", false, "Enable animation effects")
+	animationType := flag.String("animation-type", "typing", "Animation type: typing, rainbow, banner, loading")
+	animationSpeed := flag.Int("speed", 30, "Animation speed (lower is faster)")
+	noColor := flag.Bool("no-color", false, "Disable color output")
+	
 	flag.Parse()
+
+	// Setup animation configuration
+	animConfig := functions.NewDefaultAnimationConfig()
+	animConfig.Enabled = *animateMode
+	animConfig.Type = functions.Animation(*animationType)
+	animConfig.Speed = time.Duration(*animationSpeed) * time.Millisecond
+	animConfig.ColorOutput = !*noColor
+
+	// Display title if animations are enabled
+	if animConfig.Enabled && functions.IsInteractive() {
+		functions.AnimateTitle("ART DECODER", animConfig)
+	}
 
 	args := flag.Args()
 	var input string
@@ -31,7 +43,7 @@ func main() {
 	} else {
 		// If no arguments given, read either multi-line or single-line from stdin
 		if *multiLine || *encodeMode {
-			if isInteractive() {
+			if functions.IsInteractive() {
 				functions.PrintCyan("Enter multi-line input. Press Ctrl+D (Linux/macOS) or Ctrl+Z (Windows) to finish:")
 			}
 			scanner := bufio.NewScanner(os.Stdin)
@@ -56,25 +68,34 @@ func main() {
 		}
 	}
 
-	// **Step 1: Validate Input Before Processing**
+	// Show loading animation if enabled
+	if animConfig.Enabled && animConfig.Type == functions.AnimationLoading && functions.IsInteractive() {
+		loadingConfig := animConfig
+		loadingConfig.Type = functions.AnimationLoading
+		functions.AnimateOutput("", loadingConfig)
+	}
+
+	// Step 1: Validate Input Before Processing
 	err := functions.ValidateBrackets(input)
 	if err != nil {
 		functions.PrintRed(err.Error())
 		os.Exit(1)
 	}
 
-	// **Step 2: Check If Encoding Mode Is Enabled**
+	// Step 2: Check If Encoding Mode Is Enabled
 	if *encodeMode {
 		output, err := functions.Encode(input)
 		if err != nil {
 			functions.PrintRed(err.Error())
 			os.Exit(1)
 		}
-		functions.PrintGreen(output)
+		
+		// Animate or print the output
+		functions.AnimateOutput(output, animConfig)
 		return
 	}
 
-	// **Step 3: Decoding Mode**
+	// Step 3: Decoding Mode
 	var output string
 	if *multiLine {
 		output, err = functions.DecodeMultiLine(input)
@@ -82,12 +103,12 @@ func main() {
 		output, err = functions.DecodeSingleLine(input)
 	}
 
-	// **Step 4: If there's an error, print it and exit**
+	// Step 4: If there's an error, print it and exit
 	if err != nil {
 		functions.PrintRed(err.Error())
 		os.Exit(1)
 	}
 
-	// Otherwise, print the decoded output
-	functions.PrintGreen(output)
+	// Animate or print the output
+	functions.AnimateOutput(output, animConfig)
 }
