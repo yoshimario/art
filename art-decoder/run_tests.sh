@@ -47,18 +47,24 @@ for i in "${!test_inputs[@]}"; do
   expected="${expected_outputs[$i]}"
 
   # Run the decoder with multi-line flag and capture both stdout and stderr
-  output=$("$executable" -ml <<< "$input" 2>&1)
+  output_with_color=$("$executable" -ml <<< "$input" 2>&1)
+  
+  # Create a copy without color codes for comparison only
+  output_for_comparison=$(echo "$output_with_color" | sed 's/\x1b\[[0-9;]*m//g')
 
   # Remove trailing newlines for comparison (cross-platform solution)
-  output=$(echo -n "$output" | perl -pe 'chomp if eof')
+  output_for_comparison=$(echo -n "$output_for_comparison" | perl -pe 'chomp if eof')
   expected=$(echo -n "$expected" | perl -pe 'chomp if eof')
 
-  if [ "$output" == "$expected" ]; then
-    echo "✅ Inline Test passed: $input"
+  if [ "$output_for_comparison" == "$expected" ]; then
+    echo -e "✅ Inline Test passed: $input"
+    # Display the colored output if test passed
+    echo -e "   Result: $output_with_color"
   else
-    echo "❌ Inline Test failed: $input"
-    echo "   Expected: $expected"
-    echo "   Got:      $output"
+    echo -e "❌ Inline Test failed: $input"
+    echo -e "   Expected: $expected"
+    echo -e "   Got (without colors): $output_for_comparison"
+    echo -e "   Got (with colors): $output_with_color"
     fail_count=$((fail_count + 1))
   fi
 done
@@ -85,22 +91,28 @@ for encoded_file in "$encoded_dir"/*.encoded.txt; do
     continue
   fi
 
-  # Run the decoder on the encoded file and capture output
-  output=$("$executable" -ml < "$encoded_file" 2>&1)
+  # Run the decoder on the encoded file and capture output with colors
+  output_with_color=$("$executable" -ml < "$encoded_file" 2>&1)
+  
+  # Create a copy without color codes for comparison only
+  output_for_comparison=$(echo "$output_with_color" | sed 's/\x1b\[[0-9;]*m//g')
 
   # Read the expected decoded content
   expected=$(cat "$decoded_file")
 
   # Remove trailing newlines for comparison
-  output=$(echo -n "$output" | perl -pe 'chomp if eof')
+  output_for_comparison=$(echo -n "$output_for_comparison" | perl -pe 'chomp if eof')
   expected=$(echo -n "$expected" | perl -pe 'chomp if eof')
 
-  if [ "$output" == "$expected" ]; then
-    echo "✅ File Test passed: $filename"
+  if [ "$output_for_comparison" == "$expected" ]; then
+    echo -e "✅ File Test passed: $filename"
+    # Display the colored output if test passed
+    echo -e "   Result: $output_with_color"
   else
-    echo "❌ File Test failed: $filename"
-    echo "   Expected: $expected"
-    echo "   Got:      $output"
+    echo -e "❌ File Test failed: $filename"
+    echo -e "   Expected: $expected"
+    echo -e "   Got (without colors): $output_for_comparison"
+    echo -e "   Got (with colors): $output_with_color"
     fail_count=$((fail_count + 1))
   fi
 done

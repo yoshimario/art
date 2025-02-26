@@ -4,7 +4,6 @@ import (
 	"art-decoder/functions"
 	"bufio"
 	"flag"
-	"fmt"
 	"os"
 	"strings"
 )
@@ -33,7 +32,7 @@ func main() {
 		// If no arguments given, read either multi-line or single-line from stdin
 		if *multiLine || *encodeMode {
 			if isInteractive() {
-				fmt.Println("Enter multi-line input. Press Ctrl+D (Linux/macOS) or Ctrl+Z (Windows) to finish:")
+				functions.PrintCyan("Enter multi-line input. Press Ctrl+D (Linux/macOS) or Ctrl+Z (Windows) to finish:")
 			}
 			scanner := bufio.NewScanner(os.Stdin)
 			var lines []string
@@ -41,7 +40,7 @@ func main() {
 				lines = append(lines, scanner.Text())
 			}
 			if err := scanner.Err(); err != nil {
-				fmt.Fprintln(os.Stderr, "Error reading input:", err)
+				functions.PrintRed("Error reading input: " + err.Error())
 				os.Exit(1)
 			}
 			input = strings.Join(lines, "\n")
@@ -50,7 +49,7 @@ func main() {
 			reader := bufio.NewReader(os.Stdin)
 			data, err := reader.ReadString('\n')
 			if err != nil {
-				fmt.Fprintln(os.Stderr, "Error reading input:", err)
+				functions.PrintRed("Error reading input: " + err.Error())
 				os.Exit(1)
 			}
 			input = strings.TrimSpace(data)
@@ -60,7 +59,7 @@ func main() {
 	// **Step 1: Validate Input Before Processing**
 	err := functions.ValidateBrackets(input)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		functions.PrintRed(err.Error())
 		os.Exit(1)
 	}
 
@@ -68,10 +67,10 @@ func main() {
 	if *encodeMode {
 		output, err := functions.Encode(input)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			functions.PrintRed(err.Error())
 			os.Exit(1)
 		}
-		fmt.Println(output)
+		functions.PrintGreen(output)
 		return
 	}
 
@@ -85,10 +84,10 @@ func main() {
 
 	// **Step 4: If there's an error, print it and exit**
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		functions.PrintRed(err.Error())
 		os.Exit(1)
 	}
 
 	// Otherwise, print the decoded output
-	fmt.Println(output)
+	functions.PrintGreen(output)
 }
