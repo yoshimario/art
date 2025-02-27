@@ -1,7 +1,7 @@
 package main
 
 import (
-	"art-decoder/functions"
+	"art/art-decoder/functions"
 	"bufio"
 	"flag"
 	"os"
