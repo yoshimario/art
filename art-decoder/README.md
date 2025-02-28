@@ -53,8 +53,19 @@ go run . "[5 #][5 -_]-[5 #]"
 To decode a multi-line encoded string, use the `-ml` flag:
 
 ```bash
-go run . -ml "[5 #][5 -_]-[5 #]\n[3 @][2 !]"
+go run . -ml
 ```
+
+Wait for it to prompt for a multi-line
+**Input**:
+Enter each line of the encoded string, followed by a newline by pressing enter.
+
+```bash
+[5 #][5 -_]-[5 #]
+[3 @][2 !]
+```
+
+Follow the prompt to end the input depending on what OS you are using.
 
 **Output**:
 
@@ -152,7 +163,7 @@ Error: Missing closing bracket
 ### Example 1: Decoding a Simple Pattern
 
 ```bash
-go run . "[3 @][2 !]"
+go run . '[3 @][2 !]'
 ```
 
 **Output**:
@@ -164,7 +175,7 @@ go run . "[3 @][2 !]"
 ### Example 2: Decoding a Multi-line Pattern
 
 ```bash
-go run . -ml "[5 #][5 -_]-[5 #]\n[3 @][2 !]"
+go run . -ml '[5 #][5 -_]-[5 #][3 @][2 !]'
 ```
 
 **Output**:
@@ -198,7 +209,7 @@ go run . -animate -animation-type=typing -sound -sound-type=typing "[5 #][5 -_]-
 #####-_-_-_-_-_-#####
 ```
 
-*(With typing animation and sound effects)*
+_(With typing animation and sound effects)_
 
 ## Resources
 
@@ -230,6 +241,6 @@ Contributions are welcome! Please open an issue or submit a pull request for any
 
 This project is licensed under the MIT License. See the [LICENSE](https://chat.deepseek.com/a/chat/s/LICENSE) file for details.
 
-------
+---
 
 Enjoy creating text-based art with **Art Decoder**! 🎨
