@@ -211,6 +211,22 @@ go run . -animate -animation-type=typing -sound -sound-type=typing "[5 #][5 -_]-
 
 _(With typing animation and sound effects)_
 
+### Encoding Mode
+
+Below is an automated testing script that runs the tool with various inputs and flags to test its functionality:
+
+First run this to build the tool:
+
+```bash
+go build
+```
+
+Then run the following script to run the tests:
+
+```bash
+./runtests.sh
+```
+
 ## Resources
 
 - **Sample Files**:
