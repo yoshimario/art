@@ -1,0 +1,175 @@
+/* Enhance error box */
+.error {
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(40, 10, 10, 0.9);
+    /* Slightly darker background for better contrast */
+    border: 2px solid #ff0066;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(255, 0, 102, 0.6), inset 0 0 10px rgba(255, 0, 102, 0.3);
+    color: #ffcccc;
+    /* Softer pink for better readability */
+    font-weight: 500;
+    font-size: 1em;
+    /* Slightly larger font size */
+    line-height: 1.6;
+    /* Improved line spacing */
+    position: relative;
+    animation: errorPulse 2s infinite;
+}
+
+.error strong {
+    color: #ff3377;
+    text-shadow: 0 0 5px #ff3377;
+    font-size: 1.2em;
+    /* Larger font size for emphasis */
+    display: block;
+    margin-bottom: 10px;
+    /* More spacing */
+}
+
+.error::before {
+    content: "⚠ ERROR";
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: #ff0066;
+    color: #0d0d1a;
+    padding: 4px 12px;
+    /* Slightly larger padding */
+    font-size: 0.9em;
+    /* Slightly larger font size */
+    font-weight: bold;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(255, 0, 102, 0.8);
+}
+
+@keyframes errorPulse {
+    0% {
+        box-shadow: 0 0 15px rgba(255, 0, 102, 0.6), inset 0 0 10px rgba(255, 0, 102, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(255, 0, 102, 0.8), inset 0 0 15px rgba(255, 0, 102, 0.5);
+    }
+
+    100% {
+        box-shadow: 0 0 15px rgba(255, 0, 102, 0.6), inset 0 0 10px rgba(255, 0, 102, 0.3);
+    }
+}
+
+/* Improve status info display */
+.status-info {
+    margin-top: 20px;
+    /* More spacing */
+    padding: 15px 20px;
+    /* More padding */
+    background-color: rgba(0, 204, 255, 0.2);
+    /* Slightly darker for better contrast */
+    border: 1px solid #00ccff;
+    box-shadow: 0 0 15px rgba(0, 204, 255, 0.4);
+    color: #99e6ff;
+    /* Softer cyan for better readability */
+    border-radius: 4px;
+    font-size: 1em;
+    /* Larger font size */
+    line-height: 1.6;
+    /* Improved line spacing */
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+.status-info strong {
+    color: #00ffff;
+    text-shadow: 0 0 5px #00ffff;
+    font-size: 1.1em;
+    /* Larger font size for emphasis */
+}
+
+/* Additional general improvements */
+.container {
+    background: rgba(13, 13, 26, 0.95);
+    /* Slightly darker background for better contrast */
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 30px rgba(102, 51, 153, 0.6), 0 0 50px rgba(102, 51, 153, 0.3);
+    max-width: 700px;
+    /* Slightly wider for better readability */
+    width: 100%;
+    border: 2px solid #663399;
+    position: relative;
+    overflow: hidden;
+}
+
+.container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, #663399, #ff00ff, #00ccff, #663399);
+    animation: gradientMove 5s linear infinite;
+}
+
+@keyframes gradientMove {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 100% 50%;
+    }
+}
+
+/* Make buttons more cyberpunk and readable */
+button,
+.clear-button {
+    border: 1px solid;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background-color: rgba(102, 51, 153, 0.9);
+    /* Slightly darker for better contrast */
+    color: #99e6ff;
+    /* Softer cyan for better readability */
+    border-color: #00ccff;
+    font-size: 1em;
+    /* Larger font size */
+    padding: 10px 20px;
+    /* More padding for better clickability */
+    margin: 10px 0;
+    /* More spacing */
+    transition: background-color 0.3s, color 0.3s;
+}
+
+button::after,
+.clear-button::after {
+    content: "";
+    position: absolute;
+    left: -20%;
+    top: -100%;
+    width: 60%;
+    height: 300%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(30deg);
+    transition: transform 0.5s;
+    z-index: -1;
+}
+
+button:hover::after,
+.clear-button:hover::after {
+    transform: translateX(300%) rotate(30deg);
+}
+
+button:hover,
+.clear-button:hover {
+    background-color: rgba(255, 0, 102, 0.9);
+    /* Slightly darker for better contrast */
+    color: #fff;
+    border-color: #ff0066;
+}

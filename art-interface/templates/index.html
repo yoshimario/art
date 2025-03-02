@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Art Decoder</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Art Decoder</h1>
+        <form action="/decoder" method="POST">
+            <textarea name="input" rows="10" cols="50"
+                placeholder="Enter your encoded or decoded text here...">{{.Input}}</textarea><br>
+            <label>
+                <input type="radio" name="action" value="decode" {{if not .Action}}checked{{else if eq .Action "decode"
+                    }}checked{{end}}> Decode
+            </label>
+            <label>
+                <input type="radio" name="action" value="encode" {{if eq .Action "encode" }}checked{{end}}> Encode
+            </label><br>
+            <button type="submit">Generate</button>
+            <a href="/" class="clear-button">Clear</a>
+        </form>
+
+        {{if .Loading}}
+        <div class="loading">
+            Decoding/Encoding in progress...
+        </div>
+        {{end}}
+
+        {{if .Error}}
+        <div class="error">
+            <strong>Error:</strong> {{.Error}}
+        </div>
+        {{end}}
+
+        {{if .Result}}
+        <div class="result">
+            <h2>Result</h2>
+            <pre>{{.Result}}</pre>
+        </div>
+        {{end}}
+    </div>
+    {{if .Status}}
+    <div class="status-info">
+        <strong>HTTP Status:</strong> {{.Status}}
+    </div>
+    {{end}}
+</body>
+
+</html>
