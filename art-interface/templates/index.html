@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Art Decoder</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body>
@@ -13,21 +14,31 @@
         <h1>Art Decoder</h1>
         <form action="/decoder" method="POST">
             <textarea name="input" rows="10" cols="50"
-                placeholder="Enter your encoded or decoded text here...">{{.Input}}</textarea><br>
-            <label>
-                <input type="radio" name="action" value="decode" {{if not .Action}}checked{{else if eq .Action "decode"
-                    }}checked{{end}}> Decode
-            </label>
-            <label>
-                <input type="radio" name="action" value="encode" {{if eq .Action "encode" }}checked{{end}}> Encode
-            </label><br>
-            <button type="submit">Generate</button>
-            <a href="/" class="clear-button">Clear</a>
+                placeholder="Enter your encoded or decoded text here...">{{.Input}}</textarea>
+
+            <div class="radio-group">
+                <label class="radio-option">
+                    <input type="radio" name="action" value="decode" {{if not .Action}}checked{{else if eq
+                        .Action "decode" }}checked{{end}}>
+                    <span class="checkmark"></span>
+                    <span>Decode <i class="fas fa-unlock-alt"></i></span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="action" value="encode" {{if eq .Action "encode" }}checked{{end}}>
+                    <span class="checkmark"></span>
+                    <span>Encode <i class="fas fa-lock"></i></span>
+                </label>
+            </div>
+
+            <div class="button-group">
+                <button type="submit">Generate <i class="fas fa-bolt"></i></button>
+                <a href="/" class="clear-button">Clear <i class="fas fa-trash-alt"></i></a>
+            </div>
         </form>
 
         {{if .Loading}}
         <div class="loading">
-            Decoding/Encoding in progress...
+            <span>Decoding/Encoding in progress...</span>
         </div>
         {{end}}
 
@@ -41,14 +52,91 @@
         <div class="result">
             <h2>Result</h2>
             <pre>{{.Result}}</pre>
+            <button id="copyBtn" class="copy-button" onclick="copyResult()">
+                <i class="fas fa-copy"></i> Copy to clipboard
+            </button>
         </div>
+        <script>
+            function copyResult() {
+                const resultText = document.querySelector('.result pre').textContent;
+                navigator.clipboard.writeText(resultText).then(() => {
+                    const copyBtn = document.getElementById('copyBtn');
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy to clipboard';
+                    }, 2000);
+                });
+            }
+        </script>
         {{end}}
     </div>
+
     {{if .Status}}
     <div class="status-info">
         <strong>HTTP Status:</strong> {{.Status}}
     </div>
     {{end}}
+
+    <!-- Theme options -->
+    <div class="theme-options">
+        <div class="theme-option cyberpunk" onclick="setTheme('cyberpunk')" title="Cyberpunk Theme"></div>
+        <div class="theme-option vaporwave" onclick="setTheme('vaporwave')" title="Vaporwave Theme"></div>
+        <div class="theme-option matrix" onclick="setTheme('matrix')" title="Matrix Theme"></div>
+    </div>
+    <div class="mode-toggle" onclick="toggleMode()" title="Toggle Light/Dark Mode">
+        <i class="fas fa-adjust"></i>
+    </div>
+
+    <script>
+        // Store theme preference in localStorage
+        function toggleMode() {
+            const body = document.body;
+            body.classList.toggle('light-mode');
+
+            // Save preference
+            if (body.classList.contains('light-mode')) {
+                localStorage.setItem('mode', 'light');
+            } else {
+                localStorage.setItem('mode', 'dark');
+            }
+        }
+
+        function setTheme(theme) {
+            document.body.className = '';
+            document.body.classList.add(theme + '-theme');
+
+            // Remember light mode if it was active
+            if (localStorage.getItem('mode') === 'light') {
+                document.body.classList.add('light-mode');
+            }
+
+            // Save theme preference
+            localStorage.setItem('theme', theme);
+        }
+
+        // Apply saved preferences on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            const savedTheme = localStorage.getItem('theme');
+            const savedMode = localStorage.getItem('mode');
+
+            if (savedTheme) {
+                setTheme(savedTheme);
+            } else {
+                setTheme('cyberpunk'); // Default theme
+            }
+
+            if (savedMode === 'light') {
+                document.body.classList.add('light-mode');
+            }
+
+            // Auto resize textarea
+            const textarea = document.querySelector('textarea');
+            textarea.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = Math.min(500, this.scrollHeight) + 'px';
+            });
+        });
+    </script>
 </body>
 
 </html>
