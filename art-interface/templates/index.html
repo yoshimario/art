@@ -9,7 +9,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
-<body>
+<body class="{{.CurrentTheme}}">
+
+    <!-- Theme Selector -->
+    <div class="theme-selector">
+        <input type="radio" id="cyberpunk" name="theme" class="theme-toggle" value="cyberpunk" {{if eq
+            .CurrentTheme "cyberpunk" }}checked{{end}}>
+        <label for="cyberpunk">Cyberpunk</label>
+
+        <input type="radio" id="vaporwave" name="theme" class="theme-toggle" value="vaporwave" {{if eq
+            .CurrentTheme "vaporwave" }}checked{{end}}>
+        <label for="vaporwave">Vaporwave</label>
+
+        <input type="radio" id="matrix" name="theme" class="theme-toggle" value="matrix" {{if eq .CurrentTheme "matrix"
+            }}checked{{end}}>
+        <label for="matrix">Matrix</label>
+    </div>
+
     <div class="container">
         <h1>Art Decoder</h1>
         <form action="/decoder" method="POST">
@@ -48,92 +64,47 @@
         </div>
         {{end}}
 
+        {{if or .Result .Status}}
+        <div class="status-info">
+            Status Code: {{.Status}}
+            {{if eq .Status 202}}Accepted{{end}}
+            {{if eq .Status 400}}Bad Request{{end}}
+        </div>
+        {{end}}
+
         {{if .Result}}
         <div class="result">
             <h2>Result</h2>
             <pre>{{.Result}}</pre>
-            <button id="copyBtn" class="copy-button" onclick="copyResult()">
-                <i class="fas fa-copy"></i> Copy to clipboard
-            </button>
         </div>
-        <script>
-            function copyResult() {
-                const resultText = document.querySelector('.result pre').textContent;
-                navigator.clipboard.writeText(resultText).then(() => {
-                    const copyBtn = document.getElementById('copyBtn');
-                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                    setTimeout(() => {
-                        copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy to clipboard';
-                    }, 2000);
-                });
-            }
-        </script>
         {{end}}
     </div>
 
-    {{if .Status}}
-    <div class="status-info">
-        <strong>HTTP Status:</strong> {{.Status}}
-    </div>
-    {{end}}
-
-    <!-- Theme options -->
-    <div class="theme-options">
-        <div class="theme-option cyberpunk" onclick="setTheme('cyberpunk')" title="Cyberpunk Theme"></div>
-        <div class="theme-option vaporwave" onclick="setTheme('vaporwave')" title="Vaporwave Theme"></div>
-        <div class="theme-option matrix" onclick="setTheme('matrix')" title="Matrix Theme"></div>
-    </div>
-    <div class="mode-toggle" onclick="toggleMode()" title="Toggle Light/Dark Mode">
-        <i class="fas fa-adjust"></i>
-    </div>
-
     <script>
-        // Store theme preference in localStorage
-        function toggleMode() {
-            const body = document.body;
-            body.classList.toggle('light-mode');
-
-            // Save preference
-            if (body.classList.contains('light-mode')) {
-                localStorage.setItem('mode', 'light');
-            } else {
-                localStorage.setItem('mode', 'dark');
-            }
-        }
-
-        function setTheme(theme) {
-            document.body.className = '';
-            document.body.classList.add(theme + '-theme');
-
-            // Remember light mode if it was active
-            if (localStorage.getItem('mode') === 'light') {
-                document.body.classList.add('light-mode');
-            }
-
-            // Save theme preference
-            localStorage.setItem('theme', theme);
-        }
-
-        // Apply saved preferences on page load
         document.addEventListener('DOMContentLoaded', function () {
-            const savedTheme = localStorage.getItem('theme');
-            const savedMode = localStorage.getItem('mode');
+            // Theme selector
+            const themeToggles = document.querySelectorAll('.theme-toggle');
+            themeToggles.forEach(toggle => {
+                toggle.addEventListener('change', function () {
+                    if (this.checked) {
+                        const theme = this.value;
 
-            if (savedTheme) {
-                setTheme(savedTheme);
-            } else {
-                setTheme('cyberpunk'); // Default theme
-            }
-
-            if (savedMode === 'light') {
-                document.body.classList.add('light-mode');
-            }
-
-            // Auto resize textarea
-            const textarea = document.querySelector('textarea');
-            textarea.addEventListener('input', function () {
-                this.style.height = 'auto';
-                this.style.height = Math.min(500, this.scrollHeight) + 'px';
+                        // Send theme change request
+                        fetch('/change-theme', {
+                            method: 'POST',
+                            body: new URLSearchParams({ theme: theme }),
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            }
+                        })
+                            .then(response => {
+                                if (response.ok) {
+                                    // Update body class for styling
+                                    document.body.className = theme;
+                                }
+                            });
+                    }
+                });
             });
         });
     </script>

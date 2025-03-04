@@ -571,4 +571,77 @@ button:hover {
 
 .light-mode @keyframes statusPulse {
     0% {
-        box-shadow:
+        box-shadow: 0 0 10px rgba(0, 153, 204, 0.4);
+    }
+
+    100% {
+        box-shadow: 0 0 20px rgba(0, 153, 204, 0.8);
+    }
+}
+
+/* Theme-based Styling */
+body.cyberpunk {
+    background-color: #050A0E;
+    color: #FCEE09;
+}
+
+body.vaporwave {
+    background-color: #FF66B2;
+    color: #FAFAFA;
+}
+
+body.matrix {
+    background-color: #000;
+    color: #00FF00;
+}
+
+/* Container Styling */
+.container {
+    background: rgba(5, 10, 14, 0.9);
+    padding: 30px;
+    border-radius: 12px;
+    border: 2px solid #00F0FF;
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.4), 0 0 50px rgba(0, 240, 255, 0.2);
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+    transition: background 0.3s, border 0.3s, box-shadow 0.3s;
+}
+
+/* Theme Container Styles */
+body.cyberpunk .container {
+    border-color: #FCEE09;
+    box-shadow: 0 0 30px rgba(252, 238, 9, 0.4), 0 0 50px rgba(252, 238, 9, 0.2);
+}
+
+body.vaporwave .container {
+    border-color: #FF66B2;
+    box-shadow: 0 0 30px rgba(255, 102, 178, 0.4), 0 0 50px rgba(255, 102, 178, 0.2);
+}
+
+body.matrix .container {
+    border-color: #00FF00;
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.4), 0 0 50px rgba(0, 255, 0, 0.2);
+}
+
+/* Theme Selector */
+.theme-selector {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.theme-selector label {
+    padding: 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.theme-selector input {
+    display: none;
+}
+
+.theme-selector input:checked+label {
+    text-decoration: underline;
+}

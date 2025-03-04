@@ -26,6 +26,7 @@ func main() {
 	// Configure routes
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/decoder", decoderHandler)
+	http.HandleFunc("/change-theme", changeThemeHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	// Add the bonus API endpoint
@@ -39,23 +40,64 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }
 
+// New handler to change theme
+func changeThemeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		theme := r.FormValue("theme")
+		
+		// Validate theme
+		validThemes := map[string]bool{
+			"cyberpunk": true,
+			"vaporwave": true,
+			"matrix": true,
+		}
+
+		if !validThemes[theme] {
+			http.Error(w, "Invalid theme", http.StatusBadRequest)
+			return
+		}
+
+		// Set theme cookie
+		http.SetCookie(w, &http.Cookie{
+			Name:     "theme",
+			Value:    theme,
+			Path:     "/",
+			MaxAge:   86400 * 30, // 30 days
+		})
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Theme changed successfully"))
+	} else {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
+}
+
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
+		// Get theme from cookie or use default
+		theme := *themeDefault
+		cookie, err := r.Cookie("theme")
+		if err == nil && cookie != nil {
+			theme = cookie.Value
+		}
+
 		// Render the initial page with no result or error
 		data := struct {
-			Result      string
-			Error       string
-			Loading     bool
-			Input       string
-			Action      string
-			Status      int
-			Animation   bool
-			DebugMode   bool
-			ThemeDefault string
+			Result        string
+			Error         string
+			Loading       bool
+			Input         string
+			Action        string
+			Status        int
+			Animation     bool
+			DebugMode     bool
+			ThemeDefault  string
+			CurrentTheme  string
 		}{
-			Animation:   *enableAnimation,
-			DebugMode:   *debugMode,
-			ThemeDefault: *themeDefault,
+			Animation:     *enableAnimation,
+			DebugMode:     *debugMode,
+			ThemeDefault:  *themeDefault,
+			CurrentTheme:  theme,
 		}
 	
 		templates.ExecuteTemplate(w, "index.html", data)
@@ -84,25 +126,34 @@ func decoderHandler(w http.ResponseWriter, r *http.Request) {
             result, err = functions.Encode(input)
         }
 
+        // Get current theme
+        theme := *themeDefault
+        cookie, cookieErr := r.Cookie("theme")
+        if cookieErr == nil && cookie != nil {
+            theme = cookie.Value
+        }
+
         // Prepare the data
         data := struct {
-            Result      string
-            Error       string
-            Loading     bool
-            Input       string
-            Action      string
-            Status      int
-            Animation   bool
-            DebugMode   bool
-            ThemeDefault string
+            Result        string
+            Error         string
+            Loading       bool
+            Input         string
+            Action        string
+            Status        int
+            Animation     bool
+            DebugMode     bool
+            ThemeDefault  string
+            CurrentTheme  string
         }{
-            Result:      result,
-            Loading:     false,
-            Input:       input,
-            Action:      action,
-            Animation:   *enableAnimation,
-            DebugMode:   *debugMode,
-            ThemeDefault: *themeDefault,
+            Result:        result,
+            Loading:       false,
+            Input:         input,
+            Action:        action,
+            Animation:     *enableAnimation,
+            DebugMode:     *debugMode,
+            ThemeDefault:  *themeDefault,
+            CurrentTheme:  theme,
         }
 
         if err != nil {
