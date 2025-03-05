@@ -60,6 +60,11 @@ go run main.go -port=9000
 go run main.go -debug=true
 ```
 
+### 📝 Notes
+To check for the endpoint to see that it is running please use the following command:
+```bash
+curl -I http://localhost:8080
+```
 ### 🔧 Configuration Flags
 
 | Flag         | Description                  | Default Value |
@@ -92,6 +97,7 @@ go run main.go -debug=true
     "input": "Text to encode"
   }
   ```
+
 
 ### 🎨 Theme Customization
 
