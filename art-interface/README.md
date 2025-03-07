@@ -221,7 +221,7 @@ You can switch themes dynamically using the radio buttons in the UI.
 
 ## 🤝 Contributing
 
-We welcome contributions! If you'd like to contribute to the Art Decoder project, follow these steps:
+We welcome any contributions! If you'd like to contribute to the Art Decoder project, follow these steps:
 
 1. Fork the repository.
 
