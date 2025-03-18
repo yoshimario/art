@@ -12,10 +12,8 @@ func Encode(input string) (string, error) {
 	lines := strings.Split(input, "\n")
 
 	for lineIndex, line := range lines {
-		// First handle the special patterns in each line
+		// Process each line to encode repeating patterns
 		processedLine := encodeSpecialPatterns(line)
-		
-		// Then encode the processed line
 		result.WriteString(processedLine)
 
 		// Add newline character if it's not the last line
@@ -29,61 +27,64 @@ func Encode(input string) (string, error) {
 
 // encodeSpecialPatterns handles specific patterns known to appear in the ASCII art
 func encodeSpecialPatterns(line string) string {
-	// First handle the cat face and box patterns
-	catFacePatterns := map[string]string{
+	// Define common patterns to replace
+	patterns := map[string]string{
 		"/^--^\\":     "/^--^\\",
 		"\\____/":     "\\____/",
 		"/      \\":   "/      \\",
 		"|        |":  "|        |",
-		"\\__  **/":   "\\__  **/",
+		"\\__  __/":   "\\__  __/",
 		"\\**  **/":   "\\**  **/",
 		"\\**  __/":   "\\**  __/",
 	}
 
-	// Pre-process the line by replacing the cat face patterns with placeholders
+	// Replace known patterns with placeholders
 	processedLine := line
-	for pattern, replacement := range catFacePatterns {
+	for pattern, replacement := range patterns {
 		processedLine = strings.ReplaceAll(processedLine, pattern, replacement)
 	}
 
-	// Handle spaces at the beginning of a line
+	// Handle leading spaces
 	spacesPrefix := countLeadingSpaces(processedLine)
 	if spacesPrefix > 0 {
-		processedLine = fmt.Sprintf("[%d  ]%s", spacesPrefix, processedLine[spacesPrefix:])
+		processedLine = fmt.Sprintf("[%d  ]%s", spacesPrefix, strings.TrimLeft(processedLine, " "))
 	}
 
-	// Handle consecutive hash (#) symbols
-	re := regexp.MustCompile(`#{4,}`)
-	processedLine = re.ReplaceAllStringFunc(processedLine, func(s string) string {
-		return fmt.Sprintf("[%d #]", len(s))
-	})
+	// Handle repeating patterns
+	processedLine = encodeRepeatingPatterns(processedLine)
 
-	// Handle the most common pattern: consecutive "| " pairs
-	// This must capture patterns like "| | | | | |"
-	re = regexp.MustCompile(`(\| ){4,}`)
-	processedLine = re.ReplaceAllStringFunc(processedLine, func(s string) string {
+	return processedLine
+}
+
+// encodeRepeatingPatterns encodes repeating patterns like "| | | |", "|^|^|^", etc.
+func encodeRepeatingPatterns(line string) string {
+	// Handle consecutive "| " pairs (e.g., "| | | |")
+	re := regexp.MustCompile(`(\| ){2,}`)
+	line = re.ReplaceAllStringFunc(line, func(s string) string {
 		pairCount := len(s) / 2
 		return fmt.Sprintf("[%d | ]", pairCount)
 	})
 
-	// Special pattern for "|^|^|^|^|" sequences
-	re = regexp.MustCompile(`(\|[\^]){4,}`)
-	processedLine = re.ReplaceAllStringFunc(processedLine, func(s string) string {
+	// Handle consecutive "|^" pairs (e.g., "|^|^|^")
+	re = regexp.MustCompile(`(\|[\^]){2,}`)
+	line = re.ReplaceAllStringFunc(line, func(s string) string {
 		pairCount := len(s) / 2
 		return fmt.Sprintf("[%d |^]", pairCount)
 	})
 
-	// Special pattern for "\^" and "/^" sequences
-	processedLine = strings.ReplaceAll(processedLine, "\\^", "\\^")
-	processedLine = strings.ReplaceAll(processedLine, "/^", "/^")
+	// Handle consecutive "#" symbols (e.g., "########")
+	re = regexp.MustCompile(`#{2,}`)
+	line = re.ReplaceAllStringFunc(line, func(s string) string {
+		return fmt.Sprintf("[%d #]", len(s))
+	})
 
-	// Handle spaces between patterns
-	re = regexp.MustCompile(`\s{3,}`)
-	processedLine = re.ReplaceAllStringFunc(processedLine, func(s string) string {
+	// Handle consecutive spaces (e.g., "    ")
+	re = regexp.MustCompile(`\s{2,}`)
+	line = re.ReplaceAllStringFunc(line, func(s string) string {
 		return fmt.Sprintf("[%d  ]", len(s))
 	})
 
-	return processedLine
+	return line
 }
 
 // countLeadingSpaces counts the number of spaces at the beginning of a string
